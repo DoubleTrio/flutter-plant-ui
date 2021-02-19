@@ -1,9 +1,7 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-class Posts {
-
-}
 
 class Post {
   final int userId;
@@ -23,15 +21,14 @@ class Post {
 }
 
 class HomeScreen extends StatefulWidget {
-  HomeScreen({ Key key, @required this.totalUsers });
-  final int totalUsers;
+  HomeScreen({ Key key, this.postId });
+  final int postId;
 
   @override
   _HomeScreenState createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  String url = 'https://jsonplaceholder.typicode.com/posts';
   Future postFuture;
 
   @override
@@ -42,12 +39,13 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
   }
 
-  Future<Post> _getPosts() async {
-    http.Response response = await http.get(Uri.https('jsonplaceholder.typicode.com', 'posts/1'));
+  Future<List<Post>> _getPosts() async {
+    http.Response response = await http.get(Uri.https('jsonplaceholder.typicode.com', 'posts'));
     if (response.statusCode == 200) {
       // If the server did return a 200 OK response,
       // then parse the JSON.
-      return Post.fromJson(jsonDecode(response.body));
+      var ls = jsonDecode(response.body) as List;
+      return ls.map((e) => Post.fromJson(e)).toList();
     } else {
       // If the server did not return a 200 OK response,
       // then throw an exception.
@@ -64,50 +62,63 @@ class _HomeScreenState extends State<HomeScreen> {
         title: Text('Testing'),
         centerTitle: true,
       ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Invoke "debug painting" (press "p" in the console, choose the
-          // "Toggle Debug Paint" action from the Flutter Inspector in Android
-          // Studio, or the "Toggle Debug Paint" command in Visual Studio Code)
-          // to see the wireframe for each widget.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            FutureBuilder<Post>(future: postFuture, builder: (context, snapshot) {
+      body:
+          Center(
+            child: FutureBuilder<List<Post>>(future: postFuture, builder: (context, snapshot) {
               switch (snapshot.connectionState) {
                 case ConnectionState.waiting:
                   return CircularProgressIndicator(backgroundColor: Theme.of(context).primaryColor);
                 case ConnectionState.done:
-                  return Text(snapshot.data.title);
+                  print(snapshot.data[0].title);
+                  return PostList(postList: snapshot.data);
                 default:
                   return CircularProgressIndicator();
               }
             }),
-            Text(
-              'Testing',
-              style: TextStyle(fontSize: 20),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
+          ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {},
-        tooltip: 'Increment',
+        tooltip: 'Testing',
         child: Icon(Icons.add),
         backgroundColor: Theme.of(context).primaryColor,
       ), // This trailing comma makes auto-formatting nicer for build methods.
     );
+  }
+}
+
+class PostCard extends StatelessWidget {
+  PostCard({ this.userId, this.id, this.title, this.body });
+  final int userId;
+  final int id;
+  final String title;
+  final String body;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(padding: EdgeInsets.all(20), margin: EdgeInsets.all(20), child: Text(title));
+  }
+}
+
+class PostList extends StatelessWidget {
+  PostList({ this.postList });
+  final List<Post> postList;
+  @override
+  Widget build(BuildContext context) {
+    return ListView.separated(
+      itemCount: postList.length,
+      itemBuilder: (context, index) {
+        Post data = postList[index];
+        return ListTile(
+            title: Text(data.title, style: TextStyle(fontSize: 20)),
+            subtitle: Text(data.body),
+            tileColor: Colors.white10,
+            leading: Icon(Icons.image),
+            trailing: Icon(Icons.more_vert)
+        );
+      },
+      separatorBuilder: (context, index) {
+        return Container(padding: EdgeInsets.all(10));
+      },
+    );;
   }
 }
