@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:plant_ui/constants.dart';
 import 'dart:convert';
 
 class Post {
@@ -8,20 +9,21 @@ class Post {
   final int id;
   final String title;
   final String body;
-  Post({ this.userId, this.id, this.title, this.body });
+
+  Post({this.userId, this.id, this.title, this.body});
 
   factory Post.fromJson(Map<String, dynamic> json) {
     return Post(
-      userId: json['userId'],
-      id: json['id'],
-      title: json['title'],
-      body: json['body']
-    );
+        userId: json['userId'],
+        id: json['id'],
+        title: json['title'],
+        body: json['body']);
   }
 }
 
 class HomeScreen extends StatefulWidget {
-  HomeScreen({ Key key, this.postId });
+  HomeScreen({Key key, this.postId});
+
   final int postId;
 
   @override
@@ -40,7 +42,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<List<Post>> _getPosts() async {
-    http.Response response = await http.get(Uri.https('jsonplaceholder.typicode.com', 'posts'));
+    http.Response response =
+        await http.get(Uri.https('jsonplaceholder.typicode.com', 'posts'));
     if (response.statusCode == 200) {
       // If the server did return a 200 OK response,
       // then parse the JSON.
@@ -62,20 +65,25 @@ class _HomeScreenState extends State<HomeScreen> {
         title: Text('Testing'),
         centerTitle: true,
       ),
-      body:
-          Center(
-            child: FutureBuilder<List<Post>>(future: postFuture, builder: (context, snapshot) {
-              switch (snapshot.connectionState) {
-                case ConnectionState.waiting:
-                  return CircularProgressIndicator(backgroundColor: Theme.of(context).primaryColor);
-                case ConnectionState.done:
-                  print(snapshot.data[0].title);
-                  return PostList(postList: snapshot.data);
-                default:
-                  return CircularProgressIndicator();
-              }
-            }),
-          ),
+      body: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: <Widget>[
+            FeaturePlantCard(
+              image: "assets/images/bottom_img_1.png",
+              press: () {},
+            ),
+            FeaturePlantCard(
+              image: "assets/images/bottom_img_2.png",
+              press: () {},
+            ),
+            FeaturePlantCard(
+              image: "assets/images/bottom_img_1.png",
+              press: () {},
+            ),
+          ],
+        ),
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {},
         tooltip: 'Testing',
@@ -87,7 +95,8 @@ class _HomeScreenState extends State<HomeScreen> {
 }
 
 class PostCard extends StatelessWidget {
-  PostCard({ this.userId, this.id, this.title, this.body });
+  PostCard({this.userId, this.id, this.title, this.body});
+
   final int userId;
   final int id;
   final String title;
@@ -95,13 +104,18 @@ class PostCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(padding: EdgeInsets.all(20), margin: EdgeInsets.all(20), child: Text(title));
+    return Container(
+        padding: EdgeInsets.all(20),
+        margin: EdgeInsets.all(20),
+        child: Text(title));
   }
 }
 
 class PostList extends StatelessWidget {
-  PostList({ this.postList });
+  PostList({this.postList});
+
   final List<Post> postList;
+
   @override
   Widget build(BuildContext context) {
     return ListView.separated(
@@ -113,12 +127,45 @@ class PostList extends StatelessWidget {
             subtitle: Text(data.body),
             tileColor: Colors.white10,
             leading: Icon(Icons.image),
-            trailing: Icon(Icons.more_vert)
-        );
+            trailing: Icon(Icons.more_vert));
       },
       separatorBuilder: (context, index) {
         return Container(padding: EdgeInsets.all(10));
       },
-    );;
+    );
+    ;
+  }
+}
+
+class FeaturePlantCard extends StatelessWidget {
+  const FeaturePlantCard({
+    Key key,
+    this.image,
+    this.press,
+  }) : super(key: key);
+  final String image;
+  final Function press;
+
+  @override
+  Widget build(BuildContext context) {
+    Size size = MediaQuery.of(context).size;
+    return GestureDetector(
+      onTap: press,
+      child: Container(
+        margin: EdgeInsets.only(
+          left: kDefaultPadding,
+          top: kDefaultPadding / 2,
+          bottom: kDefaultPadding / 2,
+        ),
+        width: size.width * 0.8,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(10),
+          image: DecorationImage(
+            fit: BoxFit.fitWidth,
+            image: AssetImage(image),
+          ),
+        ),
+      ),
+    );
   }
 }
